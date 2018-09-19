@@ -39,7 +39,7 @@ while (true) {
 		echo "Header : ".$header."/\r\n/";
 		$i=0;
 		
-		if (strpos($header,'NUM')>0){
+		if (strpos($header,'num')>0){
             preg_match('/[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}/', $header, $ip_recup);
             $line = chop($line);			
 			
@@ -49,20 +49,20 @@ while (true) {
 				//print $line.'\r\n';
                 preg_match('~Y(.*?)Z~', $header, $matches1);
                 echo "numero à traiter ; ".$matches1[0];
-                $num = substr($matches1[1],4,12);
-				$num = trim(str_replace('&','',$num));
-				$num = trim(str_replace('+33','0',$num));
+                $num = substr($matches1[1], 4, 12);
+				$num = trim(str_replace('&','', $num));
+				$num = trim(str_replace('+33','0', $num));
 				//$num= substr($num, 0, 2).'%20'.substr($num, 2, 2).'%20'.substr($num, 4, 2).'%20'.substr($num, 6, 2).'%20'.substr($num, 8, 2);
 				$num= substr($num, 0, 2).' '.substr($num, 2, 2).' '.substr($num, 4, 2).' '.substr($num, 6, 2).' '.substr($num, 8, 2);
 				//$num= substr($num, 0, 2).substr($num, 2, 2).substr($num, 4, 2).substr($num, 6, 2).substr($num, 8, 2);
 				                   
-				$appelant = substr($matches1[1],4,40);
+				$appelant = substr($matches1[1], 4, 40);
 				socket_getpeername($socket_new, $ip); //get ip address of connected socket
 				
 					$response = mask(json_encode(array('pseudo'=>'Arnaud','type'=>'phone', 'message' =>'appel de '.$num.' le '.date("d-m H:i").'<script language="javascript">
        window.open("https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'");</script> <a href="https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'" target="blank"> lien </a>' ))); //prepare json data
 								
-				send_message1($response,$ip_recup[0]); //notifie l'utilisateur  
+				send_message1($response, $ip_recup[0]); //notifie l'utilisateur  
 				//break;
 			//}
 			
