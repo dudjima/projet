@@ -38,7 +38,7 @@ while (true) {
 		$header = socket_read($socket_new, 9999); //read data sent by the socket
 		echo "Header : ".$header."/\r\n/";
 		$i=0;
-		
+
 		if (strpos($header,'num')>0){
             preg_match('/[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}/', $header, $ip_recup);
             $line = chop($line);			
@@ -55,16 +55,17 @@ while (true) {
 				//$num= substr($num, 0, 2).'%20'.substr($num, 2, 2).'%20'.substr($num, 4, 2).'%20'.substr($num, 6, 2).'%20'.substr($num, 8, 2);
 				$num= substr($num, 0, 2).' '.substr($num, 2, 2).' '.substr($num, 4, 2).' '.substr($num, 6, 2).' '.substr($num, 8, 2);
 				//$num= substr($num, 0, 2).substr($num, 2, 2).substr($num, 4, 2).substr($num, 6, 2).substr($num, 8, 2);
-				                   
-				$appelant = substr($matches1[1], 4, 40);
-				socket_getpeername($socket_new, $ip); //get ip address of connected socket
-				
-					$response = mask(json_encode(array('pseudo'=>'Arnaud','type'=>'phone', 'message' =>'appel de '.$num.' le '.date("d-m H:i").'<script language="javascript">
-       window.open("https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'");</script> <a href="https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'" target="blank"> lien </a>' ))); //prepare json data
-								
-				send_message1($response, $ip_recup[0]); //notifie l'utilisateur  
-				//break;
-			//}
+				if(strlen($num)>9){	// si le numero est superieur à 9 c'est un appel valide sinon c'est un appel interne et on laisse          
+					$appelant = substr($matches1[1], 4, 40);
+					socket_getpeername($socket_new, $ip); //get ip address of connected socket
+					
+						$response = mask(json_encode(array('pseudo'=>'Arnaud','type'=>'phone', 'message' =>'appel de '.$num.' le '.date("d-m H:i").'<script language="javascript">
+			window.open("https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'");</script> <a href="https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'" target="blank"> lien </a>' ))); //prepare json data
+									
+					send_message1($response, $ip_recup[0]); //notifie l'utilisateur  
+					//break;
+				}
+				//}
 			
 		}else{
 			$clients[] = $socket_new; //add socket to client array si pas téléphone on ajoute la socket
