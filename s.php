@@ -4,7 +4,7 @@ $port = '9000'; //port
 $null = NULL; //null var
 date_default_timezone_set('Europe/Paris');
 
-$i=0;
+//$i=0;
 //Create TCP/IP sream socket
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 //reuseable port
@@ -21,10 +21,6 @@ $clients = array($socket);
 
 //start endless loop, so that our script doesn't stop
 while (true) {
-	
-	////
-	$patient=$med=$cli_nom=$cli_prenom=$cli_naissance_dat=$cliadr_ville=$cli_chrono=$sus=$num2='';
-	////
 	//manage multipal connections
 	$changed = $clients;
 	//returns the socket resources in $changed array
@@ -34,40 +30,35 @@ while (true) {
 	if (in_array($socket, $changed)) {
 		$socket_new = socket_accept($socket); //accept new socket
 		
-		
 		$header = socket_read($socket_new, 9999); //read data sent by the socket
 		echo "Header : ".$header."/\r\n/";
-		$i=0;
 
-		if (strpos($header,'num')>0){
-            preg_match('/[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}/', $header, $ip_recup);
-            $line = chop($line);			
-			
-			$lines = preg_split("/\r\n/", $header);
-			//foreach($lines as $line){ 
+		if (strpos($header,'num')>0){ // il s'agit d'un socket venant d'un tel
+				//on cherche l'ip dans le header
+				preg_match('/[0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}[.][0-9]{1,3}/', $header, $ip_recup);
+				$line = chop($line);			
+				
+				$lines = preg_split("/\r\n/", $header);
 
-				//print $line.'\r\n';
-                preg_match('~Y(.*?)Z~', $header, $matches1);
-                echo "numero à traiter ; ".$matches1[0];
-                $num = substr($matches1[1], 4, 12);
-				$num = trim(str_replace('&','', $num));
-				$num = trim(str_replace('+33','0', $num));
-				//$num= substr($num, 0, 2).'%20'.substr($num, 2, 2).'%20'.substr($num, 4, 2).'%20'.substr($num, 6, 2).'%20'.substr($num, 8, 2);
-				$num= substr($num, 0, 2).' '.substr($num, 2, 2).' '.substr($num, 4, 2).' '.substr($num, 6, 2).' '.substr($num, 8, 2);
-				//$num= substr($num, 0, 2).substr($num, 2, 2).substr($num, 4, 2).substr($num, 6, 2).substr($num, 8, 2);
-				if(strlen($num)>9){	// si le numero est superieur à 9 c'est un appel valide sinon c'est un appel interne et on laisse          
-					$appelant = substr($matches1[1], 4, 40);
-					socket_getpeername($socket_new, $ip); //get ip address of connected socket
-					
-						$response = mask(json_encode(array('pseudo'=>'Arnaud','type'=>'phone', 'message' =>'appel de '.$num.' le '.date("d-m H:i").'<script language="javascript">
-			window.open("https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'");</script> <a href="https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'" target="blank"> lien </a>' ))); //prepare json data
-									
-					send_message1($response, $ip_recup[0]); //notifie l'utilisateur  
-					//break;
-				}
-				//}
-			
-		}else{
+					preg_match('~Y(.*?)Z~', $header, $matches1);
+					$num = substr($matches1[1], 4, 12);
+					$num = trim(str_replace('&','', $num));
+					$num = trim(str_replace('+33','0', $num));
+					$num= substr($num, 0, 2).' '.substr($num, 2, 2).' '.substr($num, 4, 2).' '.substr($num, 6, 2).' '.substr($num, 8, 2);
+					if(strlen($num)>9){	// si le numero est superieur à 9 c'est un appel valide sinon c'est un appel interne et on laisse          
+						if(strpos($header,'manque')>0){ //c'est un appel manqué
+							socket_getpeername($socket_new, $ip); //get ip address of connected socket
+							$response = mask(json_encode(array('pseudo'=>'Arnaud', 'type'=>'manque', 'message' =>'[MANQUE] de '.$num.' le '.date("d-m H:i").'<a href="https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'" target="blank"> lien </a>' ))); //prepare json data								
+							send_message1($response,$ip_recup[0]); //notifie tout les utilisateur
+						}else{
+							socket_getpeername($socket_new, $ip); //get ip address of connected socket
+							$response = mask(json_encode(array('pseudo'=>'Arnaud','type'=>'phone', 'message' =>'appel de '.$num.' le '.date("d-m H:i").'<script language="javascript">
+							window.open("https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'");</script> <a href="https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$num.'" target="blank"> lien </a>' ))); //prepare json data								
+							send_message1($response, $ip_recup[0]); //notifie l'utilisateur  
+
+						}
+					}			
+		}else{ // il s'agit d'une connexion client
 			$clients[] = $socket_new; //add socket to client array si pas téléphone on ajoute la socket
 			$i=1;
 			perform_handshaking($header, $socket_new, $host, $port); //perform websocket handshake
