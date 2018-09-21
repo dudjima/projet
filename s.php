@@ -14,14 +14,18 @@ while (true) {																																//start endless loop, so that our 
 	if (in_array($socket, $changed)) {																										//check for new socket
 		$socket_new = socket_accept($socket); 																								//accept new socket
 		$header = socket_read($socket_new, 9999);								 															//read data sent by the socket
-		//echo "Header : ".$header."/\r\n/";
-	
-		if(preg_match_all("/(?<=\/\?|&)([^=]+)=([^&\s]*)/", $header, $matches) > 3){ 														// on a des valeurs récupéré et on les listes
-			$args = array();
-			foreach($matches[1] as $i => $arg) { $args[$arg] = $matches[2][$i];	}															//on recupere les arguments ip numero remote etat
-			$args['num'] = trim(str_replace('+33', '0',$args['num'])); 	
+		echo "Header : ".$header."/\r\n/";
+		$val = preg_match_all("/(?<=\/\?|&)([^=]+)=([^&\s]*)/", $header, $matches);
+		$args = array();
+			foreach($matches[1] as $i => $arg) { 
+				$args[$arg] = $matches[2][$i];	
+				echo "argument : ".$arg." valeur : ".$args[$arg]."\n"; 
+				}		
+		if( $val > 3 && strlen($args['num'])>5){ 														// on a des valeurs récupéré et on les listes
+			$args['num'] = trim(str_replace('+33', '0', $args['num'])); 	
 			$args['num'] = substr($args['num'], 0, 2).' '.substr($args['num'], 2, 2).' '.substr($args['num'], 4, 2).' '.substr($args['num'], 6, 2).' '.substr($args['num'], 8, 2);
-			if($args['remote']<>'@vgw1.voxity.fr'){ //c'est un appel recu
+			echo "numero : ".$args['num']."\n";
+			if(preg_match('/voxity/', $args['remote']) == 0){ //c'est un appel recu
 				switch($args['etat']){
 					case 'manque':
 						$response = mask(json_encode(array('pseudo'=>'Arnaud', 'type'=>'manque', 'message' =>'[MANQUE] de '.$args["num"].' le '.date("d-m H:i").'<a href="https://go.mytiger.pro/index.php?action=UnifiedSearch&module=Home&search_onlyin=Accounts%2CContacts%2CLeads&query_string='.$args["num"].'" target="blank"> lien </a>' ))); //prepare json data
@@ -61,8 +65,8 @@ while (true) {																																//start endless loop, so that our 
 			$found_socket = array_search($changed_socket, $clients);																		// remove client for $clients array
 			socket_getpeername($changed_socket, $ip);
 			unset($clients[$found_socket]);			
-			$response = mask(json_encode(array('type'=>'system', 'message'=>$ip.' disconnected')));											//notify all users about disconnected connection
-			send_message($response);
+			//$response = mask(json_encode(array('type'=>'system', 'message'=>$ip.' disconnected')));											//notify all users about disconnected connection
+			//send_message($response);
 		}
 	}
 }
